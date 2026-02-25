@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenModels - 智能模型推荐网关</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .model-card { 
+            background: linear-gradient(135deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.9) 100%);
+            border: 1px solid rgba(99,102,241,0.2);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <!-- Header -->
+    <header class="border-b border-slate-700/50 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                    <span class="text-xl font-bold">OM</span>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold">OpenModels</h1>
+                    <p class="text-xs text-slate-400">智能模型推荐网关</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-slate-400">基于 LiteLLM</span>
+                <a href="#api" class="px-4 py-2 bg-indigo-500/20 border border-indigo-500/30 rounded-lg text-sm hover:bg-indigo-500/30 transition-all">API接入</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero - 核心价值 -->
+    <section class="py-20 text-center">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-5xl md:text-6xl font-bold mb-6">
+                为你找到<span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">性价比最高</span>的AI模型
+            </h2>
+            <p class="text-xl text-slate-400 mb-8 max-w-2xl mx-auto">
+                不用纠结选哪个模型。输入你的场景，我们自动推荐最便宜、最适合的选择。
+            </p>
+            <p class="text-sm text-slate-500 mb-12">
+                💡 基于 LiteLLM · 支持 10+ 免费/低价模型 · 统一 OpenAI 兼容接口
+            </p>
+            
+            <!-- 快速试用 -->
+            <div class="max-w-2xl mx-auto bg-slate-800/50 rounded-2xl p-6 border border-slate-700">
+                <h3 class="text-lg font-semibold mb-4">🎯 试试智能推荐</h3>
+                <div class="flex gap-3">
+                    <input 
+                        id="scenario-input" 
+                        type="text" 
+                        placeholder="描述你的使用场景，比如：写中文技术博客..." 
+                        class="flex-1 px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                    >
+                    <button onclick="recommendModel()" class="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg font-semibold hover:shadow-lg hover:shadow-indigo-500/25 transition-all">
+                        推荐模型
+                    </button>
+                </div>
+                <div id="recommendation-result" class="mt-4 hidden"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 模型广场 - 硅基流动风格 -->
+    <section class="py-16">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-2xl font-bold">模型广场</h3>
+                <div class="flex gap-2">
+                    <button onclick="filterModels('all')" class="px-3 py-1.5 bg-indigo-500/20 text-indigo-300 rounded-lg text-sm">全部</button>
+                    <button onclick="filterModels('free')" class="px-3 py-1.5 bg-slate-700 text-slate-300 rounded-lg text-sm hover:bg-slate-600">免费</button>
+                    <button onclick="filterModels('coding')" class="px-3 py-1.5 bg-slate-700 text-slate-300 rounded-lg text-sm hover:bg-slate-600">编程</button>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- 写作模型 -->
+                <div class="model-card rounded-xl p-5 card-hover cursor-pointer" onclick="selectModel('writing')">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">免费</span>
+                        <span class="text-slate-400 text-sm">✍️ 写作虾</span>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">Llama 3.1 8B</h4>
+                    <p class="text-slate-400 text-sm mb-3">轻量级写作专用，免费使用</p>
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-700">
+                        <span class="text-green-400 font-bold">$0</span>
+                        <span class="text-xs text-slate-500">通用对话</span>
+                    </div>
+                </div>
+
+                <!-- 推理模型 -->
+                <div class="model-card rounded-xl p-5 card-hover cursor-pointer" onclick="selectModel('reasoning')">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded-full">低价</span>
+                        <span class="text-slate-400 text-sm">🧠 PM虾</span>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">DeepSeek-Chat</h4>
+                    <p class="text-slate-400 text-sm mb-3">推理能力强，中文场景表现好</p>
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-700">
+                        <span class="text-amber-400 font-bold">$0.14/M</span>
+                        <span class="text-xs text-slate-500">分析/规划</span>
+                    </div>
+                </div>
+
+                <!-- 代码模型 -->
+                <div class="model-card rounded-xl p-5 card-hover cursor-pointer" onclick="selectModel('coding')">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded-full">低价</span>
+                        <span class="text-slate-400 text-sm">🛠️ 全栈虾</span>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">DeepSeek-Coder</h4>
+                    <p class="text-slate-400 text-sm mb-3">代码专用，中文编程友好</p>
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-700">
+                        <span class="text-amber-400 font-bold">$0.14/M</span>
+                        <span class="text-xs text-slate-500">编程开发</span>
+                    </div>
+                </div>
+
+                <!-- 通用备用 -->
+                <div class="model-card rounded-xl p-5 card-hover cursor-pointer" onclick="selectModel('general')">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">免费</span>
+                        <span class="text-slate-400 text-sm">🔧 运维虾</span>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">Gemma 2 9B</h4>
+                    <p class="text-slate-400 text-sm mb-3">Google出品，通用任务</p>
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-700">
+                        <span class="text-green-400 font-bold">$0</span>
+                        <span class="text-xs text-slate-500">通用任务</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API接入 -->
+    <section id="api" class="py-16 bg-slate-800/30">
+        <div class="max-w-4xl mx-auto px-4">
+            <h3 class="text-2xl font-bold mb-8 text-center">接入方式</h3>
+            
+            <div class="bg-slate-900 rounded-xl p-6 border border-slate-700 mb-6">
+                <p class="text-slate-400 mb-3">统一 OpenAI 兼容接口，一行代码切换模型：</p>
+                <pre class="bg-slate-950 p-4 rounded-lg overflow-x-auto text-sm text-slate-300">
+import openai
+
+# 切换模型只需改 model 参数
+openai.api_base = "http://localhost:4000/v1"
+openai.api_key = "your-key"
+
+# 写作用免费模型
+response = openai.ChatCompletion.create(
+    model="writing",  # ← 或 "coding", "reasoning"
+    messages=[{"role": "user", "content": "写篇博客"}]
+)
+                </pre>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-4 text-center">
+                <div class="p-4">
+                    <div class="text-3xl mb-2">🚀</div>
+                    <h4 class="font-semibold">一键切换</h4>
+                    <p class="text-sm text-slate-400">改个参数换模型</p>
+                </div>
+                <div class="p-4">
+                    <div class="text-3xl mb-2">💰</div>
+                    <h4 class="font-semibold">省钱</h4>
+                    <p class="text-sm text-slate-400">比GPT-4便宜90%</p>
+                </div>
+                <div class="p-4">
+                    <div class="text-3xl mb-2">🎯</div>
+                    <h4 class="font-semibold">智能推荐</h4>
+                    <p class="text-sm text-slate-400">自动选最适合的</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-slate-700/50 text-center text-slate-500 text-sm">
+        <p>OpenModels (OMX) - 基于 LiteLLM 构建</p>
+        <p class="mt-1">为 DukaClaw Team 5个Agent提供智能模型推荐</p>
+    </footer>
+
+    <script>
+        // 智能推荐功能
+        async function recommendModel() {
+            const scenario = document.getElementById('scenario-input').value;
+            if (!scenario) {
+                alert('请输入使用场景');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('recommendation-result');
+            resultDiv.innerHTML = '<p class="text-slate-400">分析中...</p>';
+            resultDiv.classList.remove('hidden');
+            
+            try {
+                const res = await fetch('/v1/recommend', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({scenario})
+                });
+                const data = await res.json();
+                
+                const rec = data.recommendation;
+                resultDiv.innerHTML = `
+                    <div class="bg-indigo-500/20 border border-indigo-500/30 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-lg">${rec.name}</span>
+                            <span class="text-amber-400 font-bold">${rec.cost}</span>
+                        </div>
+                        <p class="text-slate-300">${rec.reason}</p>
+                        <p class="text-xs text-slate-500 mt-2">为 ${rec.for} 推荐</p>
+                    </div>
+                `;
+            } catch (err) {
+                resultDiv.innerHTML = '<p class="text-red-400">推荐失败，请检查代理服务</p>';
+            }
+        }
+        
+        // 选择模型
+        function selectModel(modelType) {
+            const input = document.getElementById('scenario-input');
+            const scenarios = {
+                'writing': '帮我写一篇技术博客',
+                'reasoning': '分析这个产品策略',
+                'coding': '写一个登录API',
+                'general': '通用对话'
+            };
+            input.value = scenarios[modelType] || '';
+            recommendModel();
+        }
+        
+        // 筛选模型
+        function filterModels(type) {
+            // 简化版：直接alert，后续可扩展
+            alert('筛选功能：' + type);
+        }
+        
+        // 回车提交
+        document.getElementById('scenario-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                recommendModel();
+            }
+        });
+    </script>
+</body>
+</html>
