@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "name": "openmodels",
+  "builds": [
+    {
+      "src": "frontend/public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "frontend/public/$1"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://api.modelcompass.ai/api/:path*"
+    }
+  ]
+}

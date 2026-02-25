@@ -251,6 +251,36 @@ response = openai.ChatCompletion.create(
                 recommendModel();
             }
         });
+        
+        // Mock API for demo (Vercel deployment)
+        const originalFetch = window.fetch;
+        window.fetch = async function(url, options) {
+            if (url.includes('/v1/')) {
+                // Mock responses
+                if (url.includes('/v1/models')) {
+                    return {
+                        json: () => Promise.resolve({
+                            object: "list",
+                            data: [
+                                {id: "writing", name: "Llama 3.1 8B", cost: "$0", for: "写作虾"},
+                                {id: "reasoning", name: "DeepSeek-Chat", cost: "$0.14/M", for: "PM虾/算法虾"},
+                                {id: "coding", name: "DeepSeek-Coder", cost: "$0.14/M", for: "全栈虾/运维虾"},
+                                {id: "general", name: "Gemma 2 9B", cost: "$0", for: "通用"}
+                            ]
+                        })
+                    };
+                }
+                if (url.includes('/v1/recommend')) {
+                    const scenario = JSON.parse(options.body).scenario;
+                    let rec = {model: "general", name: "Gemma 2 9B", cost: "$0", for: "通用任务", reason: "通用场景，免费使用"};
+                    if (/写|文章|博客/.test(scenario)) rec = {model: "writing", name: "Llama 3.1 8B", cost: "$0", for: "写作虾", reason: "写作任务轻量，免费模型足够流畅"};
+                    if (/代码|编程/.test(scenario)) rec = {model: "coding", name: "DeepSeek-Coder", cost: "$0.14/M", for: "全栈虾/运维虾", reason: "代码能力第一梯队，中文编程友好"};
+                    if (/分析|规划/.test(scenario)) rec = {model: "reasoning", name: "DeepSeek-Chat", cost: "$0.14/M", for: "PM虾/算法虾", reason: "推理能力强，适合分析决策，价格便宜"};
+                    return {json: () => Promise.resolve({scenario, recommendation: rec})};
+                }
+            }
+            return originalFetch(url, options);
+        };
     </script>
 </body>
 </html>
