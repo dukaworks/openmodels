@@ -1,0 +1,36 @@
+name: GitHub to Slack Notifications
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [opened, closed, reopened]
+  issues:
+    types: [opened, closed]
+  release:
+    types: [published]
+
+jobs:
+  notify-slack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send notification to Slack
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          channel-id: "C0AHRUNM77C"
+          slack-message: |
+            🚀 *${{ github.event_name }}* | *${{ github.repository }}*
+            
+            ${{ github.event_name == "push" && format("📌 推送: {0}", github.ref_name) || "" }}
+            ${{ github.event_name == "pull_request" && format("📦 PR #{0}: {1}", github.event.pull_request.number, github.event.action) || "" }}
+            ${{ github.event_name == "issues" && format("📝 Issue #{0}: {1}", github.event.issue.number, github.event.action) || "" }}
+            ${{ github.event_name == "release" && format("🎉 发布: {0}", github.event.release.tag_name) || "" }}
+            
+            • **用户**: ${{ github.actor }}
+            
+            ${{ github.event_name == "push" && format("<{0}|查看提交>", github.event.commits[0].url) || "" }}
+            ${{ github.event_name == "pull_request" && format("<{0}|查看 PR>", github.event.pull_request.html_url) || "" }}
+            ${{ github.event_name == "issues" && format("<{0}|查看 Issue>", github.event.issue.html_url) || "" }}
+            ${{ github.event_name == "release" && format("<{0}|查看 Release>", github.event.release.html_url) || "" }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
